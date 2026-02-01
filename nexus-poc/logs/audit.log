@@ -16,3 +16,7 @@
 2026-02-01 11:53:16,813 | BUCKET_CREATED name=medical-data
 2026-02-01 11:53:25,408 | CONSENT_GRANTED patient_id=patient123
 2026-02-01 11:53:25,456 | UPLOAD_OK patient_id=patient123 object=patient123/scan.txt
+2026-02-01 14:21:09,115 | CONSENT_GRANTED patient_id=patient123 hash=e8cac128fbaa6a34f6361d5ef9f43b061036e10bcde5004b4a3e6b1daa1124aa
+2026-02-01 14:21:09,140 | UPLOAD_ERROR patient_id=patient123 error=S3 operation failed; code: NotImplemented, message: Server side encryption specified but KMS is not configured (KMS not configured for a server side encrypted objects), resource: /medical-data/patient123/scan.txt, request_id: 18901EC14D4ADF9C, host_id: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8, bucket_name: medical-data, object_name: patient123/scan.txt hash=06514c92bfd99b1339b18be3af2e83d908bb0dd75f65528c1894359800716088
+2026-02-01 14:23:58,816 | CONSENT_GRANTED patient_id=patient123
+2026-02-01 14:23:58,850 | UPLOAD_OK patient_id=patient123 object=patient123/scan.enc

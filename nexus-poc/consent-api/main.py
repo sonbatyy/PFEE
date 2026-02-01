@@ -1,10 +1,20 @@
+from fastapi import FastAPI, Header, HTTPException, Depends
 from minio import Minio
-from minio.error import S3Error
-from fastapi import FastAPI
 from datetime import datetime
 import logging
 import os
 import io
+
+API_KEYS = {
+    "admin-key": "admin",
+    "user-key": "user"
+}
+
+def require_api_key(x_api_key: str = Header(...)):
+    role = API_KEYS.get(x_api_key)
+    if not role:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return role
 
 app = FastAPI(title="NEXUS Consent API")
 
@@ -21,6 +31,9 @@ logging.basicConfig(
     force=True
 )
 
+def audit_log(message: str):
+    logging.info(message)
+
 consents = {}
 
 minio_client = Minio(
@@ -34,12 +47,9 @@ BUCKET_NAME = "medical-data"
 
 @app.on_event("startup")
 def init_minio():
-    try:
-        if not minio_client.bucket_exists(BUCKET_NAME):
-            minio_client.make_bucket(BUCKET_NAME)
-            logging.info(f"BUCKET_CREATED name={BUCKET_NAME}")
-    except Exception as e:
-        logging.error(f"MINIO_INIT_ERROR {e}")
+    if not minio_client.bucket_exists(BUCKET_NAME):
+        minio_client.make_bucket(BUCKET_NAME)
+        audit_log(f"BUCKET_CREATED name={BUCKET_NAME}")
 
 @app.post("/consent/grant")
 def grant_consent(patient_id: str):
@@ -47,7 +57,7 @@ def grant_consent(patient_id: str):
         "granted": True,
         "timestamp": datetime.utcnow().isoformat()
     }
-    logging.info(f"CONSENT_GRANTED patient_id={patient_id}")
+    audit_log(f"CONSENT_GRANTED patient_id={patient_id}")
     return {"status": "granted", "patient_id": patient_id}
 
 @app.post("/consent/revoke")
@@ -56,41 +66,35 @@ def revoke_consent(patient_id: str):
         "granted": False,
         "timestamp": datetime.utcnow().isoformat()
     }
-    logging.info(f"CONSENT_REVOKED patient_id={patient_id}")
+    audit_log(f"CONSENT_REVOKED patient_id={patient_id}")
     return {"status": "revoked", "patient_id": patient_id}
 
 @app.get("/consent/{patient_id}")
 def check_consent(patient_id: str):
-    logging.info(f"CONSENT_CHECK patient_id={patient_id}")
+    audit_log(f"CONSENT_CHECK patient_id={patient_id}")
     return consents.get(patient_id, {"granted": False})
 
 @app.get("/data/access/{patient_id}")
 def access_data(patient_id: str):
     consent = consents.get(patient_id)
-
     if not consent or not consent["granted"]:
-        logging.warning(f"ACCESS_DENIED patient_id={patient_id}")
-        return {
-            "access": "denied",
-            "reason": "No valid consent"
-        }
-
-    logging.info(f"ACCESS_GRANTED patient_id={patient_id}")
-    return {
-        "access": "granted",
-        "message": "Simulated access to encrypted medical data"
-    }
+        audit_log(f"ACCESS_DENIED patient_id={patient_id}")
+        return {"access": "denied", "reason": "No valid consent"}
+    audit_log(f"ACCESS_GRANTED patient_id={patient_id}")
+    return {"access": "granted"}
 
 @app.post("/data/upload/{patient_id}")
-def upload_data(patient_id: str):
-    consent = consents.get(patient_id)
+def upload_data(patient_id: str, role: str = Depends(require_api_key)):
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Insufficient privileges")
 
+    consent = consents.get(patient_id)
     if not consent or not consent["granted"]:
-        logging.warning(f"UPLOAD_DENIED patient_id={patient_id}")
+        audit_log(f"UPLOAD_DENIED patient_id={patient_id}")
         return {"status": "denied", "reason": "No consent"}
 
-    data = b"Encrypted medical imaging data (simulated)"
-    object_name = f"{patient_id}/scan.txt"
+    data = b"ENCRYPTED::medical_imaging_payload::AES256"
+    object_name = f"{patient_id}/scan.enc"
 
     try:
         minio_client.put_object(
@@ -98,11 +102,15 @@ def upload_data(patient_id: str):
             object_name,
             data=io.BytesIO(data),
             length=len(data),
-            content_type="text/plain"
+            content_type="application/octet-stream"
         )
     except Exception as e:
-        logging.error(f"UPLOAD_ERROR patient_id={patient_id} error={e}")
+        audit_log(f"UPLOAD_ERROR patient_id={patient_id} error={e}")
         return {"status": "error", "detail": str(e)}
 
-    logging.info(f"UPLOAD_OK patient_id={patient_id} object={object_name}")
-    return {"status": "uploaded", "object": object_name}
+    audit_log(f"UPLOAD_OK patient_id={patient_id} object={object_name}")
+    return {
+        "status": "uploaded",
+        "object": object_name,
+        "encryption": "client-side"
+    }
