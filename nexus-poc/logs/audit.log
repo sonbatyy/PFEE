@@ -1,0 +1,18 @@
+2026-02-01 01:59:11,339 | CONSENT_GRANTED patient_id=patient123
+2026-02-01 01:59:17,984 | CONSENT_REVOKED patient_id=patient123
+2026-02-01 01:59:29,859 | CONSENT_GRANTED patient_id=patient123
+2026-02-01 01:59:29,870 | CONSENT_CHECK patient_id=patient123
+2026-02-01 01:59:29,881 | CONSENT_REVOKED patient_id=patient123
+2026-02-01 11:38:03,846 | ACCESS_DENIED patient_id=patient999
+2026-02-01 11:39:01,544 | CONSENT_GRANTED patient_id=patient123
+2026-02-01 11:39:01,559 | ACCESS_GRANTED patient_id=patient123
+2026-02-01 11:46:11,428 | MINIO_INIT_ERROR S3 operation failed; code: SignatureDoesNotMatch, message: The request signature we calculated does not match the signature you provided. Check your key and signing method., resource: /medical-data, request_id: 1890164C82A8F2B3, host_id: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8, bucket_name: medical-data
+2026-02-01 11:46:11,434 | UPLOAD_DENIED patient_id=patient999
+2026-02-01 11:46:14,198 | UPLOAD_DENIED patient_id=patient999
+2026-02-01 11:46:27,391 | CONSENT_GRANTED patient_id=patient123
+2026-02-01 11:49:13,795 | MINIO_INIT_ERROR S3 operation failed; code: SignatureDoesNotMatch, message: The request signature we calculated does not match the signature you provided. Check your key and signing method., resource: /medical-data, request_id: 18901676F84177A5, host_id: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8, bucket_name: medical-data
+2026-02-01 11:49:21,606 | CONSENT_GRANTED patient_id=patient123
+2026-02-01 11:49:27,165 | UPLOAD_ERROR patient_id=patient123 error=S3 operation failed; code: SignatureDoesNotMatch, message: The request signature we calculated does not match the signature you provided. Check your key and signing method., resource: /medical-data, request_id: 1890167A1542F0AE, host_id: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8, bucket_name: medical-data
+2026-02-01 11:53:16,813 | BUCKET_CREATED name=medical-data
+2026-02-01 11:53:25,408 | CONSENT_GRANTED patient_id=patient123
+2026-02-01 11:53:25,456 | UPLOAD_OK patient_id=patient123 object=patient123/scan.txt
